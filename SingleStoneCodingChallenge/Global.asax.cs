@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SingleStoneCodingChallenge.App_Start;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -11,9 +12,12 @@ namespace SingleStoneCodingChallenge
 {
     public class WebApiApplication : System.Web.HttpApplication
     {
+        public object UnityConfiguration { get; private set; }
+
         protected void Application_Start()
         {
             AreaRegistration.RegisterAllAreas();
+
             GlobalConfiguration.Configure(WebApiConfig.Register);
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);

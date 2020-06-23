@@ -122,10 +122,10 @@ namespace SingleStoneCodingChallenge
                         //c.SchemaFilter<ApplySchemaVendorExtensions>();
 
                         // In a Swagger 2.0 document, complex types are typically declared globally and referenced by unique
-                        // Schema Id. By default, Swashbuckle does NOT use the full type name in Schema Ids. In most cases, this
+                        // Schema Contact. By default, Swashbuckle does NOT use the full type name in Schema Ids. In most cases, this
                         // works well because it prevents the "implementation detail" of type namespaces from leaking into your
                         // Swagger docs and UI. However, if you have multiple types in your API with the same class name, you'll
-                        // need to opt out of this behavior to avoid Schema Id conflicts.
+                        // need to opt out of this behavior to avoid Schema Contact conflicts.
                         //
                         //c.UseFullTypeNameInSchemaIds();
 
