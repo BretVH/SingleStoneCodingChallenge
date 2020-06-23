@@ -8,6 +8,24 @@ using System.Diagnostics.CodeAnalysis;
 namespace SingleStoneCodingChallenge.Models
 {
     [ExcludeFromCodeCoverage]
+    public class ContactWithId
+    {
+        public int Id { get; set; }
+        public NameWithoutEmail Name { get; set; }
+        public Address Address { get; set; }
+        public Phone[] Phone { get; set; }
+        public string EMail { get; set; }
+    }
+
+    [ExcludeFromCodeCoverage]
+    public class NameWithoutEmail
+    {
+        public string First { get; set; }
+        public string Middle { get; set; }
+        public string Last { get; set; }
+    }
+
+    [ExcludeFromCodeCoverage]
     public class Contact
     {
         public Name Name { get; set; }

@@ -26,9 +26,9 @@ namespace SingleStoneCodingChallenge.Controllers
         // GET api/values
         [Route("contacts")]
         [HttpGet]
-        public IEnumerable<Contact> Get()
+        public IHttpActionResult Get()
         {
-            return AutoMapperConfig.RegisterMappings().Map<IEnumerable<Contact>>(_repository.GetContacts());
+            return Ok(AutoMapperConfig.RegisterMappings().Map<IEnumerable<ContactWithId>>(_repository.GetContacts()));
         }
 
         // GET api/values/5
@@ -42,7 +42,7 @@ namespace SingleStoneCodingChallenge.Controllers
                 return NotFound();
             }
             
-            return Ok(AutoMapperConfig.RegisterMappings().Map<Contact>(result)); 
+            return Ok(AutoMapperConfig.RegisterMappings().Map<ContactWithId>(result)); 
             
         }
 

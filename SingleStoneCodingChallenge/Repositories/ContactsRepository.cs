@@ -101,7 +101,7 @@ namespace SingleStoneCodingChallenge.Repositories
         public HttpStatusCode UpdateContact(Contact model, int id)
         {
             var origModel = GetContact(id);
-            if (GetContact(id).Name == null)
+            if (GetContact(id) == null)
             {
                 return HttpStatusCode.NotFound;
             }
