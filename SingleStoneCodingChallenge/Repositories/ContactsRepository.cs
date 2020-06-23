@@ -21,11 +21,9 @@ namespace SingleStoneCodingChallenge.Repositories
 {
     public class ContactsRepository : IContactsRepository
     {
-        private IContactsDbContext ContactsContext;
         private ContactsDbContext DbContext;
         public ContactsRepository(IContactsDbContext context)
         {
-            this.ContactsContext = context;
             this.DbContext = (ContactsDbContext)context;
         }
 
@@ -65,16 +63,16 @@ namespace SingleStoneCodingChallenge.Repositories
 
         public ContactModel GetContact(int id)
         {
-            var name = ContactsContext.Name.Where(c => c.Id == id).FirstOrDefault();
+            var name = DbContext.Name.Where(c => c.Id == id).FirstOrDefault();
             if(name == null)
             {
                 return null;
             }
             ContactModel model = new ContactModel()
             {
-                Address = ContactsContext.Address.Where(c => c.Id == id).FirstOrDefault(),
+                Address = DbContext.Address.Where(c => c.Id == id).FirstOrDefault(),
                 Name = name,
-                Phone = ContactsContext.Phones.Where(c => c.Contact == id).ToArray()
+                Phone = DbContext.Phones.Where(c => c.Contact == id).ToArray()
             };
 
             model.EMail = model.Name.EMail;
@@ -83,9 +81,9 @@ namespace SingleStoneCodingChallenge.Repositories
 
         public IEnumerable<ContactModel> GetContacts()
         {
-            var addresses = ContactsContext.Address.ToList();
-            var names = ContactsContext.Name.ToList();
-            var groupedPhones = ContactsContext.Phones.GroupBy(c => c.Contact).ToDictionary(group => group.Key, group => group.ToArray());
+            var addresses = DbContext.Address.ToList();
+            var names = DbContext.Name.ToList();
+            var groupedPhones = DbContext.Phones.GroupBy(c => c.Contact).ToDictionary(group => group.Key, group => group.ToArray());
             PhoneModel[] phones;
             var models = (from name in names
                           join address in addresses on name.Id equals address.Id
@@ -114,14 +112,14 @@ namespace SingleStoneCodingChallenge.Repositories
             var updatedEntity = AutoMapperConfig.RegisterMappings().Map<ContactModel>(model);
             updatedEntity.Name.Id = id;
             updatedEntity.Address.Id = id;
-            ContactsContext.Name.Attach(updatedEntity.Name);
+            DbContext.Name.Attach(updatedEntity.Name);
             DbContext.Entry(updatedEntity.Name).State = EntityState.Modified;
-            ContactsContext.Address.Attach(updatedEntity.Address);
+            DbContext.Address.Attach(updatedEntity.Address);
             DbContext.Entry(updatedEntity.Address).State = EntityState.Modified;
             foreach (var phone in updatedEntity.Phone)
             {
                 phone.Contact = id;
-                ContactsContext.Phones.Attach(phone);
+                DbContext.Phones.Attach(phone);
                 DbContext.Entry(phone).State = EntityState.Modified;
             }
             DbContext.SaveChanges();
