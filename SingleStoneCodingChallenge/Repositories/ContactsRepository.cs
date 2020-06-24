@@ -63,7 +63,8 @@ namespace SingleStoneCodingChallenge.Repositories
                 conn.Close();
                 return 1;
             }
-                
+            //always close connection
+            conn.Close();    
             var value = Convert.ToInt32(sqlId.ExecuteScalar()) + 1;
             conn.Close();
             return value;
