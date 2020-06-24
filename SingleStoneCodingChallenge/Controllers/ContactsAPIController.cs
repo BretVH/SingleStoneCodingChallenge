@@ -66,13 +66,17 @@ namespace SingleStoneCodingChallenge.Controllers
         [HttpPut]
         public IHttpActionResult Put(int id, string value)
         {
+            var result = _repository.GetContact(id);
+            if (result == null)
+            {
+                return NotFound();
+            }
             if (value != null)
             {
-                Contact contact = JsonConvert.DeserializeObject<Contact>(value);
+               Contact contact = JsonConvert.DeserializeObject<Contact>(value);
                return Content(_repository.UpdateContact(contact, id), value);
             }
-            else
-                return BadRequest();
+            return BadRequest();
         }
 
         [Route("contacts/{id}")]

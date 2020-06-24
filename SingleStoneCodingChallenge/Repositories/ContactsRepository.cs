@@ -55,7 +55,7 @@ namespace SingleStoneCodingChallenge.Repositories
             var model = GetContact(id);
             DbContext.Name.Remove(model.Name);
             DbContext.Address.Remove(model.Address);
-            foreach(var phone in model.Phone)
+            foreach (var phone in model.Phone)
                 DbContext.Phones.Remove(phone);
             DbContext.SaveChanges();
             return HttpStatusCode.OK;
@@ -64,7 +64,7 @@ namespace SingleStoneCodingChallenge.Repositories
         public ContactModel GetContact(int id)
         {
             var name = DbContext.Name.Where(c => c.Id == id).FirstOrDefault();
-            if(name == null)
+            if (name == null)
             {
                 return null;
             }
@@ -91,7 +91,7 @@ namespace SingleStoneCodingChallenge.Repositories
                           {
                               Name = name,
                               Address = address,
-                              Phone = groupedPhones.TryGetValue(name.Id, out phones)  ? phones  : null,
+                              Phone = groupedPhones.TryGetValue(name.Id, out phones) ? phones : null,
                               EMail = name.EMail
                           }).ToList();
 
@@ -107,7 +107,7 @@ namespace SingleStoneCodingChallenge.Repositories
             }
             DbContext.Entry(origModel.Name).State = EntityState.Detached;
             DbContext.Entry(origModel.Address).State = EntityState.Detached;
-            foreach(var phone in origModel.Phone)
+            foreach (var phone in origModel.Phone)
                 DbContext.Entry(phone).State = EntityState.Detached;
             var updatedEntity = AutoMapperConfig.RegisterMappings().Map<ContactModel>(model);
             updatedEntity.Name.Id = id;
@@ -124,7 +124,7 @@ namespace SingleStoneCodingChallenge.Repositories
             }
             DbContext.SaveChanges();
 
-            return HttpStatusCode.OK; 
+            return HttpStatusCode.OK;
         }
     }
 
