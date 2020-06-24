@@ -64,7 +64,7 @@ namespace SingleStoneCodingChallenge.Repositories
                 conn.Open();
                 var id = Convert.ToInt32(sqlId.ExecuteScalar());
                 conn.Close();
-                return id != 1 ? id : 1;
+                return id != 1 ? id + 1 : 1;
             }
             //always close connection
             conn.Close();
