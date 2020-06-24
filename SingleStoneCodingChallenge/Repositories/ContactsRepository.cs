@@ -131,7 +131,11 @@ namespace SingleStoneCodingChallenge.Repositories
             DbContext.SetDetached(origModel.Name);
             DbContext.SetDetached(origModel.Address);
             foreach (var phone in origModel.Phone)
-                DbContext.SetDetached(phone);
+            {
+                Phones.Remove(phone);
+                DbContext.SaveChanges();
+            }
+                
             var updatedEntity = AutoMapperConfig.RegisterMappings().Map<ContactModel>(model);
             updatedEntity.Name.Id = id;
             updatedEntity.Address.Id = id;
@@ -142,14 +146,7 @@ namespace SingleStoneCodingChallenge.Repositories
             foreach (var phone in updatedEntity.Phone)
             {
                 phone.Contact = id;
-                Phones.Attach(phone);
-                if(origModel.Phone.Length < updatedEntity.Phone.Length)
-                {
-                    if (origModel.Phone.Length == 0 || !origModel.Phone.Contains(phone))
-                        DbContext.SetAdded(phone);
-                    else
-                        DbContext.SetModified(phone);
-                }                    
+                DbContext.SetAdded(phone);          
             }
             DbContext.SaveChanges();
 
