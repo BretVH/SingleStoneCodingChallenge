@@ -21,58 +21,74 @@ namespace SingleStoneCodingChallenge.Repositories
 {
     public class ContactsRepository : IContactsRepository
     {
-        private ContactsDbContext DbContext;
+        public IContactsDbContext DbContext;
+        private DbSet<NameModel> Name => DbContext.Set<NameModel>();
+        private DbSet<PhoneModel> Phones => DbContext.Set<PhoneModel>();
+        private DbSet<AddressModel> Address => DbContext.Set<AddressModel>();
+
+
         public ContactsRepository(IContactsDbContext context)
         {
-            this.DbContext = (ContactsDbContext)context;
-        }
+            this.DbContext = context;
+             
+    }
 
         public HttpStatusCode CreateContact(Contact model)
         {
-            SqlConnection conn = new SqlConnection(DbContext.Database.Connection.ConnectionString);
-            SqlCommand comm = new SqlCommand("SELECT IDENT_CURRENT ('dbo.Contact')", conn);
-            conn.Open();
-            int id = Convert.ToInt32(comm.ExecuteScalar()) + 1;
-            conn.Close();
+            int id = GetId();
             var contactToCreate = AutoMapperConfig.RegisterMappings().Map<ContactModel>(model);
-            DbContext.Name.Attach(contactToCreate.Name);
-            DbContext.Entry(contactToCreate.Name).State = EntityState.Added;
-            DbContext.Address.Attach(contactToCreate.Address);
-            DbContext.Entry(contactToCreate.Address).State = EntityState.Added;
+            Name.Attach(contactToCreate.Name);
+            DbContext.SetAdded(contactToCreate.Name); 
+            Address.Attach(contactToCreate.Address);
+            DbContext.SetAdded(contactToCreate.Address); 
             foreach (var phone in contactToCreate.Phone)
             {
                 phone.Contact = id;
-                DbContext.Phones.Attach(phone);
-                DbContext.Entry(phone).State = EntityState.Added;
+                Phones.Attach(phone);
+                DbContext.SetAdded(phone);
             }
             DbContext.SaveChanges();
 
             return HttpStatusCode.OK;
         }
 
+        public virtual int GetId()
+        {
+            SqlConnection conn = new SqlConnection(DbContext.Database.Connection.ConnectionString);
+            SqlCommand sql = new SqlCommand("SELECT IDENT_CURRENT ('dbo.Contact')", conn);
+            conn.Open();
+            var value = Convert.ToInt32(sql.ExecuteScalar()) + 1;
+            conn.Close();
+            return value;
+        }
+
         public HttpStatusCode DeleteContact(int id)
         {
             var model = GetContact(id);
-            DbContext.Name.Remove(model.Name);
-            DbContext.Address.Remove(model.Address);
+            if(model == null)
+            {
+                return HttpStatusCode.NotFound;
+            }
+            Name.Remove(model.Name);
+            Address.Remove(model.Address);
             foreach (var phone in model.Phone)
-                DbContext.Phones.Remove(phone);
+                Phones.Remove(phone);
             DbContext.SaveChanges();
             return HttpStatusCode.OK;
         }
 
-        public ContactModel GetContact(int id)
+        public virtual ContactModel GetContact(int id)
         {
-            var name = DbContext.Name.Where(c => c.Id == id).FirstOrDefault();
+            var name = Name.FirstOrDefault(c => c.Id == id);
             if (name == null)
             {
                 return null;
             }
             ContactModel model = new ContactModel()
             {
-                Address = DbContext.Address.Where(c => c.Id == id).FirstOrDefault(),
+                Address = Address.FirstOrDefault(c => c.Id == id),
                 Name = name,
-                Phone = DbContext.Phones.Where(c => c.Contact == id).ToArray()
+                Phone = Phones.Where(c => c.Contact == id).ToArray()
             };
 
             model.EMail = model.Name.EMail;
@@ -81,9 +97,9 @@ namespace SingleStoneCodingChallenge.Repositories
 
         public IEnumerable<ContactModel> GetContacts()
         {
-            var addresses = DbContext.Address.ToList();
-            var names = DbContext.Name.ToList();
-            var groupedPhones = DbContext.Phones.GroupBy(c => c.Contact).ToDictionary(group => group.Key, group => group.ToArray());
+            var addresses = Address.ToList();
+            var names = Name.ToList();
+            var groupedPhones = Phones.GroupBy(c => c.Contact).ToDictionary(group => group.Key, group => group.ToArray());
             PhoneModel[] phones;
             var models = (from name in names
                           join address in addresses on name.Id equals address.Id
@@ -105,22 +121,28 @@ namespace SingleStoneCodingChallenge.Repositories
             {
                 return HttpStatusCode.NotFound;
             }
-            DbContext.Entry(origModel.Name).State = EntityState.Detached;
-            DbContext.Entry(origModel.Address).State = EntityState.Detached;
+            DbContext.SetDetached(origModel.Name);
+            DbContext.SetDetached(origModel.Address);
             foreach (var phone in origModel.Phone)
-                DbContext.Entry(phone).State = EntityState.Detached;
+                DbContext.SetDetached(phone);
             var updatedEntity = AutoMapperConfig.RegisterMappings().Map<ContactModel>(model);
             updatedEntity.Name.Id = id;
             updatedEntity.Address.Id = id;
-            DbContext.Name.Attach(updatedEntity.Name);
-            DbContext.Entry(updatedEntity.Name).State = EntityState.Modified;
-            DbContext.Address.Attach(updatedEntity.Address);
-            DbContext.Entry(updatedEntity.Address).State = EntityState.Modified;
+            Name.Attach(updatedEntity.Name);
+            DbContext.SetModified(updatedEntity.Name);
+            Address.Attach(updatedEntity.Address);
+            DbContext.SetModified(updatedEntity.Address);
             foreach (var phone in updatedEntity.Phone)
             {
                 phone.Contact = id;
-                DbContext.Phones.Attach(phone);
-                DbContext.Entry(phone).State = EntityState.Modified;
+                Phones.Attach(phone);
+                if(origModel.Phone.Length < updatedEntity.Phone.Length)
+                {
+                    if (origModel.Phone.Length == 0 || !origModel.Phone.Contains(phone))
+                        DbContext.SetAdded(phone);
+                    else
+                        DbContext.SetModified(phone);
+                }                    
             }
             DbContext.SaveChanges();
 
@@ -135,5 +157,6 @@ namespace SingleStoneCodingChallenge.Repositories
         HttpStatusCode UpdateContact(Contact model, int id);
         ContactModel GetContact(int id);
         HttpStatusCode DeleteContact(int id);
+        int GetId();
     }
 }

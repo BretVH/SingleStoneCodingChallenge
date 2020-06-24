@@ -37,13 +37,13 @@ namespace SingleStoneCodingChallenge.Controllers
         public IHttpActionResult Get(int id)
         {
             var result = _repository.GetContact(id);
-            if(result == null)
+            if (result == null)
             {
                 return NotFound();
             }
-            
-            return Ok(AutoMapperConfig.RegisterMappings().Map<ContactWithId>(result)); 
-            
+
+            return Ok(AutoMapperConfig.RegisterMappings().Map<ContactWithId>(result));
+
         }
 
         [Route("contacts")]
@@ -73,8 +73,8 @@ namespace SingleStoneCodingChallenge.Controllers
             }
             if (value != null)
             {
-               Contact contact = JsonConvert.DeserializeObject<Contact>(value);
-               return Content(_repository.UpdateContact(contact, id), value);
+                Contact contact = JsonConvert.DeserializeObject<Contact>(value);
+                return Content(_repository.UpdateContact(contact, id), value);
             }
             return BadRequest();
         }

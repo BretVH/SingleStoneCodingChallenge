@@ -45,7 +45,7 @@ namespace SingleStoneCodingChallenge.Models
 
     [ExcludeFromCodeCoverage]
     public class Name
-    {    
+    {
         public string First { get; set; }
         public string Middle { get; set; }
         public string Last { get; set; }
@@ -70,7 +70,7 @@ namespace SingleStoneCodingChallenge.Models
 
     [ExcludeFromCodeCoverage]
     [Table("Contact")]
-    public class NameModel 
+    public class NameModel
     {
         [Key]
         public int Id { get; set; }
@@ -102,7 +102,7 @@ namespace SingleStoneCodingChallenge.Models
         [Column(Order = 1), Key]
         public int Contact { get; set; }
         [Column("PhoneNumber", Order = 2), Key]
-        
+
         public string Number { get; set; }
         [Column("PhoneType", Order = 3), Key]
         public string Type { get; set; }
