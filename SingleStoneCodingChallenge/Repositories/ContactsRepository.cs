@@ -55,9 +55,16 @@ namespace SingleStoneCodingChallenge.Repositories
         public virtual int GetId()
         {
             SqlConnection conn = new SqlConnection(DbContext.Database.Connection.ConnectionString);
-            SqlCommand sql = new SqlCommand("SELECT IDENT_CURRENT ('dbo.Contact')", conn);
+            SqlCommand sqlId = new SqlCommand("SELECT IDENT_CURRENT ('dbo.Contact'))", conn);
+            SqlCommand isEmptyTable = new SqlCommand("Select top(1) id from dbo.Contact", conn);
             conn.Open();
-            var value = Convert.ToInt32(sql.ExecuteScalar()) + 1;
+            if (!isEmptyTable.ExecuteReader().HasRows)
+            {
+                conn.Close();
+                return 1;
+            }
+                
+            var value = Convert.ToInt32(sqlId.ExecuteScalar()) + 1;
             conn.Close();
             return value;
         }
