@@ -24,8 +24,8 @@ namespace SingleStoneCodingChallenge.Controllers
             _repository = repository;
         }
         // GET api/values
-        [Route("contacts")]
         [HttpGet]
+        [Route("contacts")]
         public IHttpActionResult Get()
         {
             return Ok(AutoMapperConfig.RegisterMappings().Map<IEnumerable<ContactWithId>>(_repository.GetContacts()));
@@ -46,10 +46,10 @@ namespace SingleStoneCodingChallenge.Controllers
 
         }
 
-        [Route("contacts")]
         [HttpPost]
+        [Route("contacts")]
         // POST api/values
-        public IHttpActionResult Post(string value)
+        public IHttpActionResult Post([FromBody]string value)
         {
             if (value != null)
             {
@@ -61,10 +61,10 @@ namespace SingleStoneCodingChallenge.Controllers
                 return BadRequest();
         }
 
+        [HttpPut]
         // PUT api/values/5
         [Route("contacts/{id}")]
-        [HttpPut]
-        public IHttpActionResult Put(int id, string value)
+        public IHttpActionResult Put(int id, [FromBody]string value)
         {
             var result = _repository.GetContact(id);
             if (result == null)
