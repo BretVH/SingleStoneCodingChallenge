@@ -9,9 +9,7 @@ namespace SingleStoneCodingChallenge.Context
 {
     public class ContactsDbContext : DbContext, IContactsDbContext
     {
-        public IDbSet<NameModel> Name => this.Set<NameModel>();
-        public IDbSet<PhoneModel> Phones => this.Set<PhoneModel>();
-        public IDbSet<AddressModel> Address => this.Set<AddressModel>();
+        public IDbSet<RawContact> Contacts => this.Set<RawContact>();
         public virtual void SetModified(object entity)
         {
             Entry(entity).State = EntityState.Modified;
@@ -30,10 +28,7 @@ namespace SingleStoneCodingChallenge.Context
 
     public interface IContactsDbContext
     {
-        IDbSet<NameModel> Name { get; }
-        IDbSet<PhoneModel> Phones { get; }
-        IDbSet<AddressModel> Address { get; }
-        Database Database { get; }
+        IDbSet<RawContact> Contacts { get; }
         void SetAdded(object entity);
         void SetModified(object entity);
         void SetDetached(object entity);

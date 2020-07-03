@@ -22,9 +22,8 @@ namespace SingleStoneCodingChallengeTests
     {
         Mock<ContactsRepository> mockContactsRepository;
         Mock<IContactsDbContext> mockContext;
-        Mock<DbSet<NameModel>> mockName;
-        Mock<DbSet<AddressModel>> mockAddress;
-        Mock<DbSet<PhoneModel>> mockPhone;
+        Mock<DbSet<RawContact>> mockContact;
+ 
         Contact model = new Contact()
         {
             Name = new Name()
@@ -50,66 +49,57 @@ namespace SingleStoneCodingChallengeTests
             EMail = "a@compton.com"
         };
 
-        IQueryable<NameModel> name = new List<NameModel>() {
-            new NameModel()
+        IQueryable<RawContact> contacts = new List<RawContact>() {
+            new RawContact()
             {
                 Id = 1,
                 First = "Bill",
                 Middle = "L",
                 Last = "Buffalo",
-                EMail = "a@compton.com"
-            }
-            }.AsQueryable();
-
-        IQueryable<AddressModel> address = new List<AddressModel>()
-            {
-                new AddressModel()
-            {
-                Id = 1,
+                Email = "a@compton.com",
                 Street = "123",
                 City = "any",
                 State = "here",
-                Zip = 1234
+                Zip = 1234,
+                MobileNumber = "12412451",
+                MobileType = "mobile"
             }
-            }.AsQueryable();
+         }.AsQueryable();
 
-        IQueryable<PhoneModel> phone = new PhoneModel[1] {
-                new PhoneModel()
-                {
-                    Contact = 1,
-                    Number = "1234",
-                    Type = "home"
-                }
-            }.AsQueryable();
+        RawContact updatedContact = new RawContact()
+        {
+            Id = 1,
+            First = "Bret",
+            Middle = "L",
+            Last = "Buffalo",
+            Email = "a@compton.com",
+            Street = "123",
+            City = "any",
+            State = "here",
+            Zip = 1234,
+            MobileNumber = "12412452",
+            MobileType = "mobile"
+        };
+
+
 
         public RepositoryTests()
         {
             mockContext = new Mock<IContactsDbContext>();
-            mockName = new Mock<DbSet<NameModel>>();
-            mockAddress = new Mock<DbSet<AddressModel>>();
-            mockPhone = new Mock<DbSet<PhoneModel>>();
+            mockContact = new Mock<DbSet<RawContact>>();
+            
             mockContactsRepository = new Mock<ContactsRepository>(mockContext.Object);
+            
             mockContext.Setup(c => c.SetAdded(It.IsAny<object>()));
             mockContext.Setup(c => c.SetModified(It.IsAny<object>()));
             mockContext.Setup(c => c.SetDetached(It.IsAny<object>()));
-            mockName.As<IQueryable<NameModel>>().Setup(c => c.Provider).Returns(name.Provider);
-            mockName.As<IQueryable<NameModel>>().Setup(m => m.Expression).Returns(name.Expression);
-            mockName.As<IQueryable<NameModel>>().Setup(m => m.ElementType).Returns(name.ElementType);
-            mockName.As<IQueryable<NameModel>>().Setup(m => m.GetEnumerator()).Returns(() => name.GetEnumerator());
-            mockAddress.As<IQueryable<AddressModel>>().Setup(c => c.Provider).Returns(address.Provider);
-            mockAddress.As<IQueryable<AddressModel>>().Setup(m => m.Expression).Returns(address.Expression);
-            mockAddress.As<IQueryable<AddressModel>>().Setup(m => m.ElementType).Returns(address.ElementType);
-            mockAddress.As<IQueryable<AddressModel>>().Setup(m => m.GetEnumerator()).Returns(() => address.GetEnumerator());
-            mockPhone.As<IQueryable<PhoneModel>>().Setup(c => c.Provider).Returns(phone.Provider);
-            mockPhone.As<IQueryable<PhoneModel>>().Setup(m => m.Expression).Returns(phone.Expression);
-            mockPhone.As<IQueryable<PhoneModel>>().Setup(m => m.ElementType).Returns(phone.ElementType);
-            mockPhone.As<IQueryable<PhoneModel>>().Setup(m => m.GetEnumerator()).Returns(() => phone.GetEnumerator());
-            mockContext.Setup(c => c.Name).Returns(mockName.Object);
-            mockContext.Setup(c => c.Address).Returns(mockAddress.Object);
-            mockContext.Setup(c => c.Phones).Returns(mockPhone.Object);
-            mockContext.Setup(c => c.Set<NameModel>()).Returns(mockName.Object);
-            mockContext.Setup(c => c.Set<AddressModel>()).Returns(mockAddress.Object);
-            mockContext.Setup(c => c.Set<PhoneModel>()).Returns(mockPhone.Object);
+            mockContact.As<IQueryable<RawContact>>().Setup(c => c.Provider).Returns(contacts.Provider);
+            mockContact.As<IQueryable<RawContact>>().Setup(m => m.Expression).Returns(contacts.Expression);
+            mockContact.As<IQueryable<RawContact>>().Setup(m => m.ElementType).Returns(contacts.ElementType);
+            mockContact.As<IQueryable<RawContact>>().Setup(m => m.GetEnumerator()).Returns(() => contacts.GetEnumerator());
+            
+            mockContext.Setup(c => c.Contacts).Returns(mockContact.Object);
+            mockContext.Setup(c => c.Set<RawContact>()).Returns(mockContact.Object);
         }
 
         [TestMethod]
@@ -128,66 +118,57 @@ namespace SingleStoneCodingChallengeTests
         }
 
         [TestMethod]
-        public void CreateContact_OK()
+        public void CreateContact_Bad_Request()
         {
-            mockContactsRepository.Setup(c => c.GetId()).Returns(0);
-            mockName.Setup(c => c.Attach(It.IsAny<NameModel>())).Returns<IDbSet<NameModel>, NameModel>(null);
-            mockAddress.Setup(c => c.Attach(It.IsAny<AddressModel>())).Returns<IDbSet<AddressModel>, AddressModel>(null);
-            mockPhone.Setup(c => c.Attach(It.IsAny<PhoneModel>())).Returns<IDbSet<PhoneModel>, PhoneModel>(null);
+            mockContact.Setup(c => c.Attach(It.IsAny<RawContact>())).Returns<IDbSet<RawContact>, RawContact>(null);
+            
+            var result = mockContactsRepository.Object.CreateContact(model);
+            Assert.AreEqual(HttpStatusCode.BadRequest, result);
+        }
+
+        [TestMethod]
+        public void CreateContact_Ok()
+        {
+            mockContact.Setup(c => c.Attach(It.IsAny<RawContact>())).Returns<IDbSet<RawContact>, RawContact>(null);
+            mockContext.Setup(c => c.SaveChanges()).Returns(1);
             var result = mockContactsRepository.Object.CreateContact(model);
             Assert.AreEqual(HttpStatusCode.OK, result);
         }
 
         [TestMethod]
-        public void UpdateContact_OK()
+        public void UpdateContact_Ok()
         {
-            mockContactsRepository.Setup(c => c.GetContact(It.IsAny<int>())).Returns(
-                AutoMapperConfig.RegisterMappings().Map<ContactModel>(model));
-            mockName.Setup(c => c.Attach(It.IsAny<NameModel>())).Returns<IDbSet<NameModel>, NameModel>(null);
-            mockAddress.Setup(c => c.Attach(It.IsAny<AddressModel>())).Returns<IDbSet<AddressModel>, AddressModel>(null);
-            mockPhone.Setup(c => c.Attach(It.IsAny<PhoneModel>())).Returns<IDbSet<PhoneModel>, PhoneModel>(null);
+            mockContact.Setup(c => c.Attach(It.IsAny<RawContact>())).Returns(contacts.FirstOrDefault());
             var result = mockContactsRepository.Object.UpdateContact(model, 1);
+            Assert.AreEqual(HttpStatusCode.OK, result);
+        }
+
+        [TestMethod]
+        public void DeleteContact_OK()
+        {
+            mockContact.Setup(c => c.Remove(It.IsAny<RawContact>())).Returns(contacts.FirstOrDefault());
+            var result = mockContactsRepository.Object.DeleteContact(1);
             Assert.AreEqual(HttpStatusCode.OK, result);
         }
 
         [TestMethod]
         public void UpdateContact_Not_Found()
         {
-            mockContactsRepository.Setup(c => c.GetContact(It.IsAny<int>())).Returns<ContactsRepository, ContactModel>(null);
-            mockName.Setup(c => c.Attach(It.IsAny<NameModel>())).Returns<IDbSet<NameModel>, NameModel>(null);
-            mockAddress.Setup(c => c.Attach(It.IsAny<AddressModel>())).Returns<IDbSet<AddressModel>, AddressModel>(null);
-            mockPhone.Setup(c => c.Attach(It.IsAny<PhoneModel>())).Returns<IDbSet<PhoneModel>, PhoneModel>(null);
-            var result = mockContactsRepository.Object.UpdateContact(model, 1);
+            var result = mockContactsRepository.Object.UpdateContact(model, 2);
             Assert.AreEqual(HttpStatusCode.NotFound, result);
-        }
-
-        [TestMethod]
-        public void DeleteContact_OK()
-        {
-            mockContactsRepository.Setup(c => c.GetContact(It.IsAny<int>())).Returns(
-                AutoMapperConfig.RegisterMappings().Map<ContactModel>(model));
-            mockName.Setup(c => c.Remove(It.IsAny<NameModel>())).Returns<IDbSet<NameModel>, NameModel>(null);
-            mockAddress.Setup(c => c.Remove(It.IsAny<AddressModel>())).Returns<IDbSet<AddressModel>, AddressModel>(null);
-            mockPhone.Setup(c => c.Remove(It.IsAny<PhoneModel>())).Returns<IDbSet<PhoneModel>, PhoneModel>(null);
-            var result = mockContactsRepository.Object.DeleteContact(1);
-            Assert.AreEqual(HttpStatusCode.OK, result);
-        }
+        }        
 
         [TestMethod]
         public void DeleteContact_Not_Found()
         {
-            mockContactsRepository.Setup(c => c.GetContact(It.IsAny<int>())).Returns<ContactsRepository, ContactModel>(null);
-            mockName.Setup(c => c.Remove(It.IsAny<NameModel>())).Returns<IDbSet<NameModel>, NameModel>(null);
-            mockAddress.Setup(c => c.Remove(It.IsAny<AddressModel>())).Returns<IDbSet<AddressModel>, AddressModel>(null);
-            mockPhone.Setup(c => c.Remove(It.IsAny<PhoneModel>())).Returns<IDbSet<PhoneModel>, PhoneModel>(null);
-            var result = mockContactsRepository.Object.DeleteContact(1);
+            var result = mockContactsRepository.Object.DeleteContact(2);
             Assert.AreEqual(HttpStatusCode.NotFound, result);
         }
 
         [TestMethod]
         public void Get_Not_Found()
         {
-            var result = mockContactsRepository.Object.GetContact(1);
+            var result = mockContactsRepository.Object.GetContact(2);
             Assert.IsNull(result);
         }
     }

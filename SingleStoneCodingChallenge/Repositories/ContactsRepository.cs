@@ -22,9 +22,7 @@ namespace SingleStoneCodingChallenge.Repositories
     public class ContactsRepository : IContactsRepository
     {
         public IContactsDbContext DbContext;
-        private DbSet<NameModel> Name => DbContext.Set<NameModel>();
-        private DbSet<PhoneModel> Phones => DbContext.Set<PhoneModel>();
-        private DbSet<AddressModel> Address => DbContext.Set<AddressModel>();
+        private DbSet<RawContact> Contact => DbContext.Set<RawContact>();
 
 
         public ContactsRepository(IContactsDbContext context)
@@ -35,138 +33,71 @@ namespace SingleStoneCodingChallenge.Repositories
 
         public HttpStatusCode CreateContact(Contact model)
         {
-            int id = GetId();
-            var contactToCreate = AutoMapperConfig.RegisterMappings().Map<ContactModel>(model);
-            Name.Attach(contactToCreate.Name);
-            DbContext.SetAdded(contactToCreate.Name); 
-            Address.Attach(contactToCreate.Address);
-            DbContext.SetAdded(contactToCreate.Address); 
-            foreach (var phone in contactToCreate.Phone)
-            {
-                phone.Contact = id;
-                Phones.Attach(phone);
-                DbContext.SetAdded(phone);
-            }
-            DbContext.SaveChanges();
-
-            return HttpStatusCode.OK;
-        }
-
-        public virtual int GetId()
-        {
-            SqlConnection conn = new SqlConnection(DbContext.Database.Connection.ConnectionString);
-            SqlCommand sqlId = new SqlCommand("SELECT IDENT_CURRENT ('dbo.Contact')", conn);
-            SqlCommand isEmptyTable = new SqlCommand("Select top(1) id from dbo.Contact", conn);
-            conn.Open();
-            if (!isEmptyTable.ExecuteReader().HasRows)
-            {
-                conn.Close();
-                conn.Open();
-                var id = Convert.ToInt32(sqlId.ExecuteScalar());
-                conn.Close();
-                return id != 1 ? id + 1 : 1;
-            }
-            //always close connection
-            conn.Close();
-            //reopen connection
-            conn.Open();
-            var value = Convert.ToInt32(sqlId.ExecuteScalar()) + 1;
-            conn.Close();
-            return value;
-        }
+            var contactToCreate = AutoMapperConfig.RegisterMappings().Map<RawContact>(model);
+            Contact.Add(contactToCreate);
+            if (DbContext.SaveChanges() <= 0)
+                return HttpStatusCode.BadRequest;
+            else
+                return HttpStatusCode.OK;
+        }  
 
         public HttpStatusCode DeleteContact(int id)
         {
-            var model = GetContact(id);
-            if(model == null)
+            var contactWithId = Contact.FirstOrDefault(c => c.Id == id);
+            if (contactWithId == null)
             {
                 return HttpStatusCode.NotFound;
             }
-            Name.Remove(model.Name);
-            Address.Remove(model.Address);
-            foreach (var phone in model.Phone)
-                Phones.Remove(phone);
+            var model = AutoMapperConfig.RegisterMappings().Map<RawContact>(contactWithId);
+            Contact.Remove(model);
             DbContext.SaveChanges();
             return HttpStatusCode.OK;
         }
 
-        public virtual ContactModel GetContact(int id)
+        public virtual ContactWithId GetContact(int id)
         {
-            var name = Name.FirstOrDefault(c => c.Id == id);
-            if (name == null)
+            var contactWithId = Contact.FirstOrDefault(c => c.Id == id);
+            if (contactWithId == null)
             {
                 return null;
             }
-            ContactModel model = new ContactModel()
-            {
-                Address = Address.FirstOrDefault(c => c.Id == id),
-                Name = name,
-                Phone = Phones.Where(c => c.Contact == id).ToArray()
-            };
-
-            model.EMail = model.Name.EMail;
+            var model = AutoMapperConfig.RegisterMappings().Map<ContactWithId>(contactWithId);
             return model;
         }
 
-        public IEnumerable<ContactModel> GetContacts()
+        public IEnumerable<ContactWithId> GetContacts()
         {
-            var addresses = Address.ToList();
-            var names = Name.ToList();
-            var groupedPhones = Phones.GroupBy(c => c.Contact).ToDictionary(group => group.Key, group => group.ToArray());
-            PhoneModel[] phones;
-            var models = (from name in names
-                          join address in addresses on name.Id equals address.Id
-                          select new ContactModel()
-                          {
-                              Name = name,
-                              Address = address,
-                              Phone = groupedPhones.TryGetValue(name.Id, out phones) ? phones : null,
-                              EMail = name.EMail
-                          }).ToList();
-
+            var contactsWithIds = Contact.ToList();
+            var models = AutoMapperConfig.RegisterMappings().Map<IEnumerable<ContactWithId>>(contactsWithIds);
             return models;
         }
 
         public HttpStatusCode UpdateContact(Contact model, int id)
         {
-            var origModel = GetContact(id);
-            if (GetContact(id) == null)
+            var origModel = Contact.FirstOrDefault(c => c.Id == id);
+            if (origModel == null)
             {
                 return HttpStatusCode.NotFound;
             }
-            DbContext.SetDetached(origModel.Name);
-            DbContext.SetDetached(origModel.Address);
-            foreach (var phone in origModel.Phone)
-            {
-                Phones.Remove(phone);
-                DbContext.SaveChanges();
-            }
                 
-            var updatedEntity = AutoMapperConfig.RegisterMappings().Map<ContactModel>(model);
-            updatedEntity.Name.Id = id;
-            updatedEntity.Address.Id = id;
-            Name.Attach(updatedEntity.Name);
-            DbContext.SetModified(updatedEntity.Name);
-            Address.Attach(updatedEntity.Address);
-            DbContext.SetModified(updatedEntity.Address);
-            foreach (var phone in updatedEntity.Phone)
-            {
-                phone.Contact = id;
-                DbContext.SetAdded(phone);          
-            }
+            var updatedEntity = AutoMapperConfig.RegisterMappings().Map<RawContact>(model);
+            updatedEntity.Id = id;
+            DbContext.SetDetached(origModel);
+            Contact.Attach(updatedEntity);
+            DbContext.SetModified(updatedEntity);
             DbContext.SaveChanges();
-
             return HttpStatusCode.OK;
         }
+
+ 
     }
 
     public interface IContactsRepository
     {
-        IEnumerable<ContactModel> GetContacts();
+        IEnumerable<ContactWithId> GetContacts();
         HttpStatusCode CreateContact(Contact model);
         HttpStatusCode UpdateContact(Contact model, int id);
-        ContactModel GetContact(int id);
+        ContactWithId GetContact(int id);
         HttpStatusCode DeleteContact(int id);
-        int GetId();
     }
 }

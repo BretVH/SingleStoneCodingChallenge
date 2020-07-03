@@ -25,7 +25,7 @@ namespace SingleStoneCodingChallengeTests
         public void ContactsAPIController_Get_Returns_Ok()
         {
             Mock<IContactsRepository> mockRepo = new Mock<IContactsRepository>();
-            mockRepo.Setup(c => c.GetContact(1)).Returns(new ContactModel());
+            mockRepo.Setup(c => c.GetContact(1)).Returns(new ContactWithId());
             var controller = new ContactsAPIController(mockRepo.Object);
             controller.Configuration = new System.Web.Http.HttpConfiguration();
             controller.Request = new System.Net.Http.HttpRequestMessage();
@@ -38,7 +38,7 @@ namespace SingleStoneCodingChallengeTests
         public void ContactsAPIController_Get_Returns_Not_Found()
         {
             Mock<IContactsRepository> mockRepo = new Mock<IContactsRepository>();
-            mockRepo.Setup(c => c.GetContact(1)).Returns<IContactsRepository, ContactModel>(null);
+            mockRepo.Setup(c => c.GetContact(1)).Returns<IContactsRepository, ContactWithId>(null);
             var controller = new ContactsAPIController(mockRepo.Object);
             controller.Configuration = new System.Web.Http.HttpConfiguration();
             controller.Request = new System.Net.Http.HttpRequestMessage();
@@ -51,7 +51,7 @@ namespace SingleStoneCodingChallengeTests
         public void ContactsAPIController_GetAll_Returns_Ok()
         {
             Mock<IContactsRepository> mockRepo = new Mock<IContactsRepository>();
-            mockRepo.Setup(c => c.GetContacts()).Returns<IContactsRepository, ContactModel>(null);
+            mockRepo.Setup(c => c.GetContacts()).Returns<IContactsRepository, ContactWithId>(null);
             var controller = new ContactsAPIController(mockRepo.Object);
             controller.Configuration = new System.Web.Http.HttpConfiguration();
             controller.Request = new System.Net.Http.HttpRequestMessage();
@@ -91,7 +91,7 @@ namespace SingleStoneCodingChallengeTests
         {
             Mock<IContactsRepository> mockRepo = new Mock<IContactsRepository>();
             mockRepo.Setup(c => c.UpdateContact(new Contact(), 1)).Returns(HttpStatusCode.OK);
-            mockRepo.Setup(c => c.GetContact(1)).Returns(new ContactModel());
+            mockRepo.Setup(c => c.GetContact(1)).Returns(new ContactWithId());
             var controller = new ContactsAPIController(mockRepo.Object);
             controller.Configuration = new System.Web.Http.HttpConfiguration();
             controller.Request = new System.Net.Http.HttpRequestMessage();
@@ -103,7 +103,7 @@ namespace SingleStoneCodingChallengeTests
         public void ContactsAPIController_Put_Returns_Not_Found()
         {
             Mock<IContactsRepository> mockRepo = new Mock<IContactsRepository>();
-            mockRepo.Setup(c => c.GetContact(1)).Returns<IContactsRepository, ContactModel>(null);
+            mockRepo.Setup(c => c.GetContact(1)).Returns<IContactsRepository, ContactWithId>(null);
             var controller = new ContactsAPIController(mockRepo.Object);
             controller.Configuration = new System.Web.Http.HttpConfiguration();
             controller.Request = new System.Net.Http.HttpRequestMessage();
@@ -116,7 +116,7 @@ namespace SingleStoneCodingChallengeTests
         public void ContactsAPIController_Put_Returns_OK()
         {
             Mock<IContactsRepository> mockRepo = new Mock<IContactsRepository>();
-            mockRepo.Setup(c => c.GetContact(1)).Returns(new ContactModel());
+            mockRepo.Setup(c => c.GetContact(1)).Returns(new ContactWithId());
             mockRepo.Setup(c => c.UpdateContact(new Contact(), 1)).Returns(HttpStatusCode.OK);
             var controller = new ContactsAPIController(mockRepo.Object);
             controller.Configuration = new System.Web.Http.HttpConfiguration();
@@ -130,7 +130,7 @@ namespace SingleStoneCodingChallengeTests
         public void ContactsAPIController_Delete_Returns_Not_Found()
         {
             Mock<IContactsRepository> mockRepo = new Mock<IContactsRepository>();
-            mockRepo.Setup(c => c.GetContact(1)).Returns<IContactsRepository, ContactModel>(null);
+            mockRepo.Setup(c => c.GetContact(1)).Returns<IContactsRepository, ContactWithId>(null);
             var controller = new ContactsAPIController(mockRepo.Object);
             controller.Configuration = new System.Web.Http.HttpConfiguration();
             controller.Request = new System.Net.Http.HttpRequestMessage();
@@ -142,7 +142,7 @@ namespace SingleStoneCodingChallengeTests
         public void ContactsAPIController_Delete_Returns_OK()
         {
             Mock<IContactsRepository> mockRepo = new Mock<IContactsRepository>();
-            mockRepo.Setup(c => c.GetContact(1)).Returns(new ContactModel());
+            mockRepo.Setup(c => c.GetContact(1)).Returns(new ContactWithId());
             mockRepo.Setup(c => c.DeleteContact(1)).Returns(HttpStatusCode.OK);
             var controller = new ContactsAPIController(mockRepo.Object);
             controller.Configuration = new System.Web.Http.HttpConfiguration();
